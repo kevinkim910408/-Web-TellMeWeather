@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+<!-- Bootstrap, Jquery -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+            crossorigin="anonymous"></script>
+
+    <title>Tell Me Weather!</title>
+
+    <style>
+        .header{
+            width: 100%;
+            height: 400px;
+
+            background-image: url("https://thumbs.dreamstime.com/b/blue-sky-cloudscape-background-banner-panorama-clouds-sun-reflection-sunshine-sunbeams-cloudy-blue-sky-cloudscape-230669447.jpg");
+            background-repeat: no-repeat;
+            background-size: cover;
+
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .header .header-btn{
+            margin-left: 10px;
+        }
+
+        .header .header-search{
+            width: 50%;
+            text-align: center;
+        }
+
+        .main{
+            width: 95%;
+            max-width: 500px;
+
+            margin: 20px auto;
+        }
+
+    </style>
+
+    <script>
+        $(document).ready(function () {
+            show_weather();
+        });
+
+        function save_cityName() {
+            let cityName = $('#search-cityName').val();
+            $.ajax({
+                type: 'POST',
+                url: '/search',
+                data: {'cityName_give': cityName},
+                success: function (response) {
+                    alert(response['msg'])
+                    window.location.reload()
+                }
+            })
+        }
+
+        // 날씨를 보여주는 코드.
+        function show_weather() {
+
+            // DB에서 가져오는 ajax이다.
+            $.ajax({
+                type: "GET",
+                url: "/search",
+                data: {},
+                success: function (response) {
+                    // 도시이름을 가져와서 그 도시이름을 url에 넣어준다.
+                    let rows = response['msg']
+
+                    // city name을 가져와서 url 중앙에 넣어준다
+                    for (let i = 0; i < rows.length; ++i) {
+                        let cityName = rows[i]['cityName'];
+                        url = "https://api.openweathermap.org/data/2.5/weather?q=" + cityName + "&appid=3de474db76b0433d7c350250d3e62508"
+
+                        // 그 url을 가지고 api를 가져온다
+                        $.ajax({
+                            type: "GET",
+                            url: url,
+                            data: {},
+                            success: function (response) {
+                                // api response를 가지고 필요한 정보를 뽑아낸다
+                                let aboutTemp = response['main'];
+
+                                let cityName = response['name'];
+                                let currentTemp = aboutTemp['temp'];
+                                let feelTemp = aboutTemp['temp_max'];
+                                let humidityTemp = aboutTemp['humidity'];
+                                let windSpeed = response['wind']['speed'];
+                                let icon = response['weather']
+
+                                // Time Calculator
+                                let timezone = response['timezone']
+                                let d = new Date((new Date().getTime()) + timezone * 1000)
+
+                                // logic
+                                let weatherURL = ["data:image/jpeg;base64,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"
+                                    , "https://mblogthumb-phinf.pstatic.net/20160223_280/ksy4378953_1456190111690DAFhF_JPEG/PicsArt_1456021923813.jpg?type=w2"
+                                    , "https://mblogthumb-phinf.pstatic.net/20151201_144/ksy4378953_1448965542395D4ynK_JPEG/PicsArt_1448623475225.jpg?type=w420"
+                                ]
+
+                                let temp_html = `<div class="card">
+                                            <div class="card-body">
+                                                <blockquote class="blockquote mb-0">
+                                                        <div class="weather-header">
+                                                            <img width=32px src="http://openweathermap.org/img/w/${icon[0].icon}.png"/>
+                                                            <h5 id="city-name">${cityName}</h5>
+                                                        </div>
+                                                        <div class="weather-main">
+                                                            <div id="curTime">Current Time: ${d.toISOString().replace("T", " ").replace(/\..*/, "")}</div>
+                                                            <div id="curTemp">Current Temperature: ${Math.floor(currentTemp - 273.15)}°</div>
+                                                            <div id="feelTemp">Feel Temperature: ${Math.floor(feelTemp - 273.15)}</div>
+                                                            <div id="wind">Wind: ${windSpeed} m/s</div>
+                                                            <div id="humidity">humidity: ${humidityTemp} %</div>
+                                                        </div>
+                                                </blockquote>
+                                            </div>
+                                        </div>`
+                                $('#main-weather').append(temp_html);
+                            },
+                            error: function () {
+                                alert('CITY NAME IS WRONG')
+                            }
+                        })
+                    }
+                }
+            });
+        };
+
+    </script>
+</head>
+<body>
+<!--Header -->
+    <div class="header">
+        <input id="search-cityName" type="text" class="header-search" placeholder="Search Here!">
+        <button onclick="save_cityName()" type="button" class="header-btn">Search</button>
+    </div>
+
+<!--Main-->
+    <div class="main" id="main-weather">
+        <!-- Weather Card will be added here-->
+    </div>
+
+</body>
+</html>
